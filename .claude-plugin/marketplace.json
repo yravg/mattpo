@@ -1,0 +1,12 @@
+{
+  "name": "mattpo",
+  "owner": { "name": "Enrico D. Marlon" },
+  "metadata": { "description": "mattpo: Matt Pocock's engineering skills, kept in sync with upstream every day, with a yravg manager." },
+  "plugins": [
+    {
+      "name": "mattpo",
+      "source": "./",
+      "description": "Pinned Matt Pocock engineering skills with a yravg manager. Run /mattpo:mattpo-mode."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+# Keeps mattpo in step with https://github.com/mattpocock/skills.
+# Daily, and on demand: gh workflow run upstream-sync.yml -R yravg/mattpo
+# - Upstream unchanged: nothing happens.
+# - Upstream changed and every guard passes: the snapshot is applied, tests run,
+#   the plugin patch version is bumped, and the result is committed to main.
+#   Installs with marketplace auto-update pick it up on the next Claude Code start.
+# - A guard refuses (licence changed, skill added/removed/renamed, dependency gap)
+#   or a test fails: nothing is committed and an issue labelled upstream-sync is opened.
+name: upstream-sync
+on:
+  schedule:
+    - cron: '23 1 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply upstream (guarded)
+        id: apply
+        run: |
+          set +e
+          node scripts/sync.mjs --apply > sync.out 2>&1
+          code=$?
+          set -e
+          cat sync.out
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if grep -q '(applied)' sync.out; then echo "applied=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Stop on network or payload failure
+        if: steps.apply.outputs.code == '2'
+        run: exit 1
+      - name: Test the applied snapshot
+        id: tests
+        if: steps.apply.outputs.applied == 'true'
+        run: |
+          set +e
+          { node scripts/test-snapshot.mjs && node scripts/test-sync.mjs; } > tests.out 2>&1
+          code=$?
+          cat tests.out
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+      - name: Commit to main
+        if: steps.apply.outputs.applied == 'true' && steps.tests.outputs.code == '0'
+        run: |
+          version=$(node scripts/bump-version.mjs)
+          sha=$(node -e "console.log(require('./upstream.lock.json').upstream.sha)")
+          today=$(date -u +%Y-%m-%d)
+          node -e "
+            const fs=require('fs');const f='CHANGELOG.md';const s=fs.readFileSync(f,'utf8');
+            const entry='## ${version} (${today})\n\n- Upstream sync to mattpocock/skills \`${sha}\`. '+fs.readFileSync('sync.out','utf8').trim().split('\n').pop()+'\n\n';
+            fs.writeFileSync(f,s.replace(/^(# Changelog\n\n)/,'\$1'+entry));"
+          git config user.name 'mattpo-sync[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A -- . ':!sync.out' ':!tests.out'
+          git commit -m "Sync upstream mattpocock/skills ${sha:0:12} (v${version})"
+          git push origin HEAD:main
+      - name: Open an issue when review is needed
+        if: steps.apply.outputs.code == '1' || (steps.apply.outputs.applied == 'true' && steps.tests.outputs.code != '0')
+        run: |
+          gh label create upstream-sync --color FBCA04 --description 'Upstream change needs a human' 2>/dev/null || true
+          title="Upstream sync needs review"
+          body=$(printf 'The daily sync did not commit.\n\nSync output:\n```\n%s\n```\n\nTests:\n```\n%s\n```\n\nSee docs/handoff/mattpo.md, section "When the sync opens an issue".\n\nRun: %s/%s/actions/runs/%s' \
+            "$(cat sync.out)" "$(cat tests.out 2>/dev/null || echo 'not run')" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          existing=$(gh issue list --label upstream-sync --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then gh issue comment "$existing" --body "$body"; else gh issue create --title "$title" --label upstream-sync --body "$body"; fi
