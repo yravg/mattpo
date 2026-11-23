@@ -19,10 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-The upstream snapshot in vendor/, and the upstream skill bodies copied into
-skills/ (every skill except mattpo, mattpo-mode, mattpo-help and mattpo-sync),
-are from https://github.com/mattpocock/skills under the MIT License,
-Copyright (c) 2026 Matt Pocock. That licence text is kept in vendor/LICENSE.

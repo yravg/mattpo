@@ -4,7 +4,7 @@ Engineering skills from [mattpocock/skills](https://github.com/mattpocock/skills
 
 The current upstream commit, upstream plugin version and sync time are in [`UPSTREAM.md`](UPSTREAM.md). Version history is in [`CHANGELOG.md`](CHANGELOG.md).
 
-**Licence:** MIT. The glue (the mode, the core skill, the help skill, the sync skill, the agent, and `scripts/`) is Copyright (c) 2026 Enrico D. Marlon, see [`LICENSE`](LICENSE). The upstream skills are MIT, Copyright (c) 2026 Matt Pocock, see [`vendor/LICENSE`](vendor/LICENSE). `skills/pr/CREDITS.md` keeps the Humanlayer / Dex Horthy credit from upstream.
+**Licence:** MIT. The glue (the mode, the core skill, the help skill, the sync skill, the agent, and `scripts/`) is Copyright (c) 2026 Enrico D. Marlon, see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). The upstream skills are MIT, Copyright (c) 2026 Matt Pocock, see [`vendor/LICENSE`](vendor/LICENSE). `skills/pr/CREDITS.md` keeps the Humanlayer / Dex Horthy credit from upstream.
 
 ## Start here
 
